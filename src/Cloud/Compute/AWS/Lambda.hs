@@ -1,6 +1,6 @@
 module Cloud.Compute.AWS.Lambda where
 
-import Data.Text (Text)
+newtype LambdaT evt m a = LambdaT { runLambdaT :: evt -> m a }
 
-checkWire :: Text
-checkWire = "checked"
+liftLambdaT :: (Monad m) =>  m a -> LambdaT evt m a
+liftLambdaT ma = LambdaT $ const ma
