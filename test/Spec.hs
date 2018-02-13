@@ -12,8 +12,19 @@ main = defaultMain tests
 
 tests :: TestTree
 tests = testGroup "All Tests" [
-    testCase "lambda runs" $ do
+    testCase "construct lambdat" $ do
         let embedded = 17
+        -- when
             lambda = liftLambdaT (Identity embedded)
-        runIdentity (runLambdaT lambda "anything") @?= embedded
+        -- then
+        runIdentity (runLambdaT lambda "anything") @?= embedded,
+    testCase "lambdaT functor" $do
+        let embedded = 19
+            transform = (+1)
+            lambda = liftLambdaT (Identity embedded)
+        -- when
+            actual = transform <$> lambda
+        -- then
+        runIdentity (runLambdaT actual "anything") @?= transform embedded
+
   ]
