@@ -31,3 +31,8 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - aws-lambda
+    - tasty
+    - tasty-hunit
+    - tasty-smallcheck
+
+

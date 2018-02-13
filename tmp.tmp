@@ -1,0 +1,51 @@
+-- This file has been generated from package.yaml by hpack version 0.20.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 7ecd3821bbddcc8be8a27e41ff541bc0fdb2bc062a3b0f5af98fe27c1dd58e80
+
+name:           aws-lambda
+version:        0.1.0.0
+synopsis:       Develop computations for AWS Lambda
+description:    README on Github at <https://github.com/aztecrex/haskell-lib-aws-lambda#readme>
+category:       Cloud
+homepage:       https://github.com/aztecrex/haskell-lib-aws-lambda#readme
+bug-reports:    https://github.com/aztecrex/haskell-lib-aws-lambda/issues
+author:         Greg Wiley
+maintainer:     aztec.rex@jammm.com
+copyright:      2018 Greg Wiley
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+
+extra-source-files:
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/aztecrex/haskell-lib-aws-lambda
+
+library
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+  exposed-modules:
+      Cloud.Compute.AWS.Lambda
+  other-modules:
+      Paths_aws_lambda
+  default-language: Haskell2010
+
+test-suite aws-lambda-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aws-lambda
+    , base >=4.7 && <5
+  other-modules:
+      Paths_aws_lambda
+  default-language: Haskell2010
