@@ -8,7 +8,7 @@ copyright:           "2018 Greg Wiley"
 
 extra-source-files:
 - README.md
-- ChangeLog.m
+- ChangeLog.md
 
 synopsis: Develop computations for AWS Lambda
 category: Cloud
@@ -17,6 +17,7 @@ description: README on Github at <https://github.com/aztecrex/haskell-lib-aws-la
 
 dependencies:
 - base >= 4.7 && < 5
+- text
 
 library:
   source-dirs: src
@@ -35,4 +36,27 @@ tests:
     - tasty-hunit
     - tasty-smallcheck
 
+default-extensions:
+  - ConstraintKinds
+  - DefaultSignatures
+  - DeriveFunctor
+  - DeriveGeneric
+  - ExistentialQuantification
+  - FlexibleContexts
+  - FlexibleInstances
+  - FunctionalDependencies
+  - GADTs
+  - MonoLocalBinds
+  - GeneralizedNewtypeDeriving
+  - KindSignatures
+  - LambdaCase
+  - MultiParamTypeClasses
+  - NamedFieldPuns
+  - OverloadedStrings
+  - RankNTypes
+  - ScopedTypeVariables
+  - StandaloneDeriving
+  - TupleSections
+  - TypeApplications
+  - TypeOperators
 
