@@ -14,6 +14,9 @@ liftLambda v = liftLambdaT (pure v)
 newtype LambdaT evt m a = LambdaT { runLambdaT :: evt -> m a }
     deriving (Functor)
 
+argument :: (Applicative m) => LambdaT evt m evt
+argument = LambdaT pure
+
 liftLambdaT ::  m a -> LambdaT evt m a
 liftLambdaT ma = LambdaT $ const ma
 
