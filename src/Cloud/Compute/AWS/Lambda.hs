@@ -24,3 +24,8 @@ instance (Applicative m) => Applicative (LambdaT evt m) where
     pure = liftLambdaT . pure
     LambdaT mf <*> LambdaT ma = LambdaT $ liftA2 (<*>) mf ma
 
+instance (Monad m) => Monad (LambdaT evt m) where
+    (LambdaT c) >>= f = LambdaT $ \evt -> do
+        a <- c evt
+        runLambdaT (f a) evt
+

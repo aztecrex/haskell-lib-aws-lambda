@@ -46,5 +46,21 @@ tests = testGroup "All Tests" [
         -- when
             actual = liftA2 op lambda1 lambda2
         -- then
-        runLambda actual "anything" @?= op embedded1 embedded2
+        runLambda actual "anything" @?= op embedded1 embedded2,
+
+    testCase "monad return" $ do
+        let embedded = 919
+        -- when
+            actual = return embedded
+        -- then
+        runLambda actual "anything" @?= embedded,
+
+    testCase "monad bind" $ do
+        let embedded = 920
+            op = (+ 7)
+            orig = pure embedded
+            f a = pure (op a)
+        -- when
+            actual = orig >>= f
+        runLambda actual "anything" @?= op embedded
   ]
