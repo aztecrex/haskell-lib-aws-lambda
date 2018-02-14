@@ -14,7 +14,7 @@ main = defaultMain tests
 tests :: TestTree
 tests = testGroup "All Tests" [
 
-    testCase "construct lambdaT" $ do
+    testCase "construct lambdaT from wrapped" $ do
         let embedded = 17
         -- when
             lambda = liftLambdaT (Identity embedded)
@@ -62,5 +62,15 @@ tests = testGroup "All Tests" [
             f a = pure (op a)
         -- when
             actual = orig >>= f
-        runLambda actual "anything" @?= op embedded
+        runLambda actual "anything" @?= op embedded,
+
+    testCase "demo" $ do
+        let input = 30
+            op = (* 100)
+        -- when
+            actual = do
+                x <- argument
+                pure $ op x
+        runLambda actual input @?= op input
+
   ]
