@@ -21,6 +21,9 @@ argument = LambdaT pure
 liftLambdaT ::  m a -> LambdaT evt m a
 liftLambdaT ma = LambdaT $ const ma
 
+nogood :: (Applicative m) => err -> LambdaT evt m (Either err a)
+nogood err = pure $ Left err
+
 -- GeneralizedNewtypeDeriving can't figure out applicative
 instance (Applicative m) => Applicative (LambdaT evt m) where
     pure = liftLambdaT . pure

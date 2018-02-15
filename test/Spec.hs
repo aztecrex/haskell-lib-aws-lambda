@@ -9,7 +9,7 @@ import Control.Applicative (liftA2)
 import Control.Monad.Trans.Class (lift)
 
 
-import Cloud.Compute.AWS.Lambda (runLambdaT, liftLambdaT, runLambda, liftLambda, argument)
+import Cloud.Compute.AWS.Lambda (runLambdaT, liftLambdaT, runLambda, liftLambda, argument, nogood)
 
 main :: IO ()
 main = defaultMain tests
@@ -84,7 +84,13 @@ tests = testGroup "All Tests" [
                 x <- argument
                 lift (inner x)
         assertBool "" $ runReader (runLambdaT actual 150) 150
-        assertBool "" $ not $ runReader (runLambdaT actual 150) 151
+        assertBool "" $ not $ runReader (runLambdaT actual 150) 151,
+
+    testCase "failure" $ do
+        let err = "epic fail"
+        -- when
+            actual = nogood err
+        runLambda actual "anything" @?= (Left err :: Either String String)
 
 
   ]
