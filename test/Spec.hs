@@ -1,10 +1,13 @@
 module Main where
 
 import Test.Tasty (TestTree, testGroup, defaultMain)
-import Test.Tasty.HUnit (testCase, (@?=))
+import Test.Tasty.HUnit (testCase, (@?=), assertBool)
 
 import Data.Functor.Identity (Identity(..), runIdentity)
+import Control.Monad.Reader (ask, runReader)
 import Control.Applicative (liftA2)
+import Control.Monad.Trans.Class (lift)
+
 
 import Cloud.Compute.AWS.Lambda (runLambdaT, liftLambdaT, runLambda, liftLambda, argument)
 
@@ -71,6 +74,17 @@ tests = testGroup "All Tests" [
             actual = do
                 x <- argument
                 pure $ op x
-        runLambda actual input @?= op input
+        runLambda actual input @?= op input,
+
+    testCase "monad trans" $ do
+        let inner a = do
+                b <- ask
+                return (a == b)
+            actual = do
+                x <- argument
+                lift (inner x)
+        assertBool "" $ runReader (runLambdaT actual 150) 150
+        assertBool "" $ not $ runReader (runLambdaT actual 150) 151
+
 
   ]

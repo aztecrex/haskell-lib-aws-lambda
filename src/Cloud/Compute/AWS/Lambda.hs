@@ -2,6 +2,7 @@ module Cloud.Compute.AWS.Lambda where
 
 import Data.Functor.Identity(Identity(..), runIdentity)
 import Control.Applicative (liftA2)
+import Control.Monad.Trans.Class (MonadTrans, lift)
 
 type Lambda evt a = LambdaT evt Identity a
 
@@ -30,4 +31,7 @@ instance (Monad m) => Monad (LambdaT evt m) where
     (LambdaT c) >>= f = LambdaT $ \evt -> do
         a <- c evt
         runLambdaT (f a) evt
+
+instance MonadTrans (LambdaT evt) where
+    lift = liftLambdaT
 

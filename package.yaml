@@ -16,8 +16,10 @@ category: Cloud
 description: README on Github at <https://github.com/aztecrex/haskell-lib-aws-lambda#readme>
 
 dependencies:
-- base >= 4.7 && < 5
-- text
+  - base >= 4.7 && < 5
+  - text
+  - mtl
+  - transformers
 
 library:
   source-dirs: src
