@@ -22,25 +22,31 @@ tests = testGroup "All Tests" [
         -- when
             lambda = liftLambdaT (Identity embedded)
         -- then
-        runIdentity (runLambdaT lambda "anything") @?= embedded,
+        runIdentity (runLambdaT lambda "anything") @?= (Right embedded :: Either String Int),
 
     testCase "extract argument" $ do
         let input = "input"
         -- when
             actual = argument
         -- then
-        runLambda actual input @?= input,
+        runLambda actual input @?= (Right input :: Either String String),
 
-        testCase "functor" $ do
+    testCase "functor" $ do
         let embedded = 19
             transform = (+1)
             lambda = liftLambda embedded
         -- when
             actual = transform <$> lambda
         -- then
-        runLambda actual "anything" @?= transform embedded,
+        runLambda actual "anything" @?= (Right (transform embedded) :: Either String Int),
 
-    testCase "applicative" $ do
+    testCase "failure" $ do
+        let err = "epic fail"
+        -- when
+            actual = nogood err
+        runLambda actual "anything" @?= (Left err :: Either String String),
+
+        testCase "applicative" $ do
         let embedded1 = 19
             lambda1 = liftLambda embedded1
             embedded2 = 119
@@ -49,23 +55,42 @@ tests = testGroup "All Tests" [
         -- when
             actual = liftA2 op lambda1 lambda2
         -- then
-        runLambda actual "anything" @?= op embedded1 embedded2,
+        runLambda actual "anything" @?= (Right (op embedded1 embedded2) :: Either String Int),
 
     testCase "monad return" $ do
         let embedded = 919
         -- when
             actual = return embedded
         -- then
-        runLambda actual "anything" @?= embedded,
+        runLambda actual "anything" @?= (Right embedded :: Either String Int),
 
-    testCase "monad bind" $ do
+    testCase "monad bind (continue)" $ do
         let embedded = 920
             op = (+ 7)
             orig = pure embedded
             f a = pure (op a)
         -- when
             actual = orig >>= f
-        runLambda actual "anything" @?= op embedded,
+        runLambda actual "anything" @?= (Right (op embedded) :: Either String Int),
+
+    testCase "monad bind (failed)" $ do
+        let err = "stop here"
+            orig = nogood err
+            op = (* 7)
+            f a = pure (op a)
+        -- when
+            actual = orig >>= f
+        runLambda actual "anything" @?= Left err,
+
+    testCase "monad trans" $ do
+        let inner a = do
+                b <- ask
+                return (a == b)
+            program = do
+                x <- argument
+                lift (inner x)
+        runReader (runLambdaT program 150) 150 @?= (Right True :: Either String Bool)
+        runReader (runLambdaT program 150) 151 @?= (Right False :: Either String Bool),
 
     testCase "demo" $ do
         let input = 30
@@ -74,23 +99,7 @@ tests = testGroup "All Tests" [
             actual = do
                 x <- argument
                 pure $ op x
-        runLambda actual input @?= op input,
-
-    testCase "monad trans" $ do
-        let inner a = do
-                b <- ask
-                return (a == b)
-            actual = do
-                x <- argument
-                lift (inner x)
-        assertBool "" $ runReader (runLambdaT actual 150) 150
-        assertBool "" $ not $ runReader (runLambdaT actual 150) 151,
-
-    testCase "failure" $ do
-        let err = "epic fail"
-        -- when
-            actual = nogood err
-        runLambda actual "anything" @?= (Left err :: Either String String)
+        runLambda actual input @?= (Right (op input) :: Either String Int)
 
 
   ]
