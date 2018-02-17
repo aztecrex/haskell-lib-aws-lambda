@@ -23,11 +23,11 @@ runLambda lambda event = runIdentity (runLambdaT lambda event)
 liftLambda :: a -> Lambda evt err a
 liftLambda v = liftLambdaT (pure v)
 
-newtype LambdaT evt err m a = Wrap { unwrapLambdaT :: ReaderT evt (ExceptT  err m) a }
+newtype LambdaT evt err m a = Wrap { unwrap :: ReaderT evt (ExceptT  err m) a }
     deriving (Functor, Applicative, Monad)
 
 runLambdaT :: LambdaT evt err m a -> evt -> m (Either err a)
-runLambdaT lambda = runExceptT . runReaderT (unwrapLambdaT lambda)
+runLambdaT lambda = runExceptT . runReaderT (unwrap lambda)
 
 liftLambdaT :: (Monad m) => m a -> LambdaT evt err m a
 liftLambdaT ma = Wrap $ (lift . lift) ma
