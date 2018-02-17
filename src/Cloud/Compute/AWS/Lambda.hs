@@ -1,4 +1,12 @@
-module Cloud.Compute.AWS.Lambda where
+module Cloud.Compute.AWS.Lambda (
+    runLambda,
+    liftLambda,
+    runLambdaT,
+    liftLambdaT,
+    argument,
+    nogood,
+    LambdaT
+) where
 
 import Data.Functor.Identity(Identity(..), runIdentity)
 import Control.Applicative (liftA2)
