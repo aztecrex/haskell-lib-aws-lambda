@@ -6,7 +6,9 @@ module Cloud.Compute.AWS.Lambda (
     argument,
     nogood,
     Lambda,
-    LambdaT
+    LambdaT,
+    toSerial,
+    interop
 ) where
 
 import Data.Functor.Identity(Identity(..), runIdentity)
