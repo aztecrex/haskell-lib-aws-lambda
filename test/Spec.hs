@@ -7,9 +7,10 @@ import Data.Functor.Identity (Identity(..), runIdentity)
 import Control.Monad.Reader (ask, runReader)
 import Control.Applicative (liftA2)
 import Control.Monad.Trans.Class (lift)
+import Control.Monad.IO.Class (liftIO)
 
 
-import Cloud.Compute.AWS.Lambda (runLambdaT, liftLambdaT, runLambda, liftLambda, argument, nogood)
+import Cloud.Compute.AWS.Lambda (runLambdaT, liftLambdaT, runLambda, liftLambda, argument, nogood, LambdaT)
 
 main :: IO ()
 main = defaultMain tests
@@ -92,6 +93,14 @@ tests = testGroup "All Tests" [
         runReader (runLambdaT program 150) 150 @?= (Right True :: Either String Bool)
         runReader (runLambdaT program 150) 151 @?= (Right False :: Either String Bool),
 
+    testCase "monad IO" $ do
+        let v = 131
+            op = (* 17)
+            program :: LambdaT String String IO Int = do
+                x <- liftIO (pure v)
+                pure $ op x
+        assertBool "" True, -- compile-only test
+
     testCase "demo" $ do
         let input = 30
             op = (* 100)
@@ -100,6 +109,5 @@ tests = testGroup "All Tests" [
                 x <- argument
                 pure $ op x
         runLambda actual input @?= (Right (op input) :: Either String Int)
-
 
   ]

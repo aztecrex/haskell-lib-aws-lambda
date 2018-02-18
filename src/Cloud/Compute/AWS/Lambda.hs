@@ -12,6 +12,7 @@ module Cloud.Compute.AWS.Lambda (
 import Data.Functor.Identity(Identity(..), runIdentity)
 import Control.Applicative (liftA2)
 import Control.Monad.Trans.Class (MonadTrans, lift)
+import Control.Monad.IO.Class (MonadIO)
 
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Reader
@@ -25,7 +26,7 @@ liftLambda :: a -> Lambda evt err a
 liftLambda = liftLambdaT . pure
 
 newtype LambdaT evt err m a = Wrap { unwrap :: ReaderT evt (ExceptT  err m) a }
-    deriving (Functor, Applicative, Monad)
+    deriving (Functor, Applicative, Monad, MonadIO)
 
 runLambdaT :: LambdaT evt err m a -> evt -> m (Either err a)
 runLambdaT lambda = runExceptT . runReaderT (unwrap lambda)
