@@ -14,14 +14,18 @@ import Control.Applicative (liftA2)
 import Control.Monad (when)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
+import Data.IORef (IORef, newIORef, atomicModifyIORef')
+import Foreign.Marshal.Alloc(free)
 
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Reader
 
-import Data.ByteString (ByteString)
+import Data.ByteString (ByteString, packCString, useAsCString)
 import Data.ByteString.Lazy (toStrict)
 import Foreign.C (CString, newCString)
 import Data.Aeson (FromJSON, ToJSON, decodeStrict, encode)
+
+
 
 type Lambda evt err a = LambdaT evt err Identity a
 
@@ -53,11 +57,8 @@ instance MonadTrans (LambdaT evt err) where
 
 -- type AWSLambdaIntegration = AWSLambda CString CString
 
-encodeStrict :: (ToJSON a) => a -> ByteString
-encodeStrict = toStrict . encode
-
 interop ::(ByteString -> IO ByteString) -> CString -> IO CString
-interop = error "Not yet implemented"
+interop f input = packCString input >>= f >>= unpackCString
 
 toSerial :: (FromJSON input, ToJSON output, ToJSON error, ToJSON invalid) => invalid -> (input -> IO (Either output error)) -> ByteString -> IO ByteString
 toSerial inv f bytes = do
@@ -86,4 +87,22 @@ demoInterop =
     in (interop . toSerial invalid ) demoLambda
 
 
+returned :: IO (IORef CString)
+returned = newCString "{}" >>= newIORef
+
+replace :: CString -> IO CString
+replace v = do
+    ref <- returned
+    prev <- atomicModifyIORef' ref (\x -> (v, x))
+    free prev
+    pure v
+
+clear :: IO CString
+clear = newCString "{}" >>= replace
+
+unpackCString :: ByteString -> IO CString
+unpackCString bytes = useAsCString bytes replace
+
+encodeStrict :: ToJSON a => a -> ByteString
+encodeStrict = toStrict . encode
 
