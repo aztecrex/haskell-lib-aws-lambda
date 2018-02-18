@@ -1,7 +1,7 @@
 module Main where
 
 import Test.Tasty (TestTree, testGroup, defaultMain)
-import Test.Tasty.HUnit (testCase, (@?=), assertBool)
+import Test.Tasty.HUnit (testCase, (@?=), assertBool, Assertion, assertFailure)
 
 import Data.Functor.Identity (Identity(..), runIdentity)
 import Control.Monad.Reader (ask, runReader)
@@ -15,22 +15,38 @@ import Cloud.Compute.AWS.Lambda (runLambdaT, liftLambdaT, runLambda, liftLambda,
 main :: IO ()
 main = defaultMain tests
 
+assertRight :: (Eq a, Show a) => Either e a -> a -> Assertion
+assertRight (Right actual) expected = actual @?= expected
+assertRight _ _ = assertFailure "should be Right"
+
+(@?>=) :: (Eq a, Show a) => Either e a -> a -> Assertion
+(@?>=) = assertRight
+
+assertLeft :: (Eq e, Show e) => Either e a -> e -> Assertion
+assertLeft (Left actual) expected = actual @?= expected
+assertLeft _ _ = assertFailure "should be Left"
+
+(@?<=) :: (Eq e, Show e) => Either e a -> e -> Assertion
+(@?<=) = assertLeft
+
+
+
 tests :: TestTree
 tests = testGroup "All Tests" [
 
-    testCase "construct lambdaT from wrapped" $ do
+    testCase "construct lambdaT from inner" $ do
         let embedded = 17
         -- when
             lambda = liftLambdaT (Identity embedded)
         -- then
-        runIdentity (runLambdaT lambda "anything") @?= (Right embedded :: Either String Int),
+        runIdentity (runLambdaT lambda "anything") @?>= embedded,
 
     testCase "extract argument" $ do
         let input = "input"
         -- when
             actual = argument
         -- then
-        runLambda actual input @?= (Right input :: Either String String),
+        runLambda actual input @?>= input,
 
     testCase "functor" $ do
         let embedded = 19
@@ -39,13 +55,13 @@ tests = testGroup "All Tests" [
         -- when
             actual = transform <$> lambda
         -- then
-        runLambda actual "anything" @?= (Right (transform embedded) :: Either String Int),
+        runLambda actual "anything" @?>= transform embedded,
 
     testCase "failure" $ do
         let err = "epic fail"
         -- when
             actual = nogood err
-        runLambda actual "anything" @?= (Left err :: Either String String),
+        runLambda actual "anything" @?<= err,
 
         testCase "applicative" $ do
         let embedded1 = 19
@@ -56,14 +72,14 @@ tests = testGroup "All Tests" [
         -- when
             actual = liftA2 op lambda1 lambda2
         -- then
-        runLambda actual "anything" @?= (Right (op embedded1 embedded2) :: Either String Int),
+        runLambda actual "anything" @?>= op embedded1 embedded2,
 
     testCase "monad return" $ do
         let embedded = 919
         -- when
             actual = return embedded
         -- then
-        runLambda actual "anything" @?= (Right embedded :: Either String Int),
+        runLambda actual "anything" @?>= embedded,
 
     testCase "monad bind (continue)" $ do
         let embedded = 920
@@ -72,7 +88,7 @@ tests = testGroup "All Tests" [
             f a = pure (op a)
         -- when
             actual = orig >>= f
-        runLambda actual "anything" @?= (Right (op embedded) :: Either String Int),
+        runLambda actual "anything" @?>= op embedded,
 
     testCase "monad bind (failed)" $ do
         let err = "stop here"
@@ -81,7 +97,7 @@ tests = testGroup "All Tests" [
             f a = pure (op a)
         -- when
             actual = orig >>= f
-        runLambda actual "anything" @?= Left err,
+        runLambda actual "anything" @?<= err,
 
     testCase "monad trans" $ do
         let inner a = do
@@ -90,8 +106,8 @@ tests = testGroup "All Tests" [
             program = do
                 x <- argument
                 lift (inner x)
-        runReader (runLambdaT program 150) 150 @?= (Right True :: Either String Bool)
-        runReader (runLambdaT program 150) 151 @?= (Right False :: Either String Bool),
+        runReader (runLambdaT program 150) 150 @?>= True
+        runReader (runLambdaT program 150) 151 @?>= False,
 
     testCase "monad IO" $ do
         let v = 131
@@ -99,7 +115,7 @@ tests = testGroup "All Tests" [
             program :: LambdaT String String IO Int = do
                 x <- liftIO (pure v)
                 pure $ op x
-        assertBool "" True, -- compile-only test
+        runLambdaT program "anything" >> pure (), -- compilation is verification, this just runs it
 
     testCase "demo" $ do
         let input = 30
@@ -108,6 +124,6 @@ tests = testGroup "All Tests" [
             actual = do
                 x <- argument
                 pure $ op x
-        runLambda actual input @?= (Right (op input) :: Either String Int)
+        runLambda actual input @?>= op input
 
   ]
