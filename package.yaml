@@ -38,27 +38,27 @@ tests:
     - tasty-hunit
     - tasty-smallcheck
 
-default-extensions: >
-  ConstraintKinds
-  , DefaultSignatures
-  , DeriveFunctor
-  , DeriveGeneric
-  , ExistentialQuantification
-  , FlexibleContexts
-  , FlexibleInstances
-  , FunctionalDependencies
-  , GADTs
-  , MonoLocalBinds
-  , GeneralizedNewtypeDeriving
-  , KindSignatures
-  , LambdaCase
-  , MultiParamTypeClasses
-  , NamedFieldPuns
-  , OverloadedStrings
-  , RankNTypes
-  , ScopedTypeVariables
-  , StandaloneDeriving
-  , TupleSections
-  , TypeApplications
-  , TypeOperators
+default-extensions:
+  - ConstraintKinds
+  - DefaultSignatures
+  - DeriveFunctor
+  - DeriveGeneric
+  - ExistentialQuantification
+  - FlexibleContexts
+  - FlexibleInstances
+  - FunctionalDependencies
+  - GADTs
+  - MonoLocalBinds
+  - GeneralizedNewtypeDeriving
+  - KindSignatures
+  - LambdaCase
+  - MultiParamTypeClasses
+  - NamedFieldPuns
+  - OverloadedStrings
+  - RankNTypes
+  - ScopedTypeVariables
+  - StandaloneDeriving
+  - TupleSections
+  - TypeApplications
+  - TypeOperators
 
