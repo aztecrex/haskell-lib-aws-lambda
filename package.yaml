@@ -20,6 +20,8 @@ dependencies:
   - text
   - mtl
   - transformers
+  - aeson
+  - bytestring
 
 library:
   source-dirs: src

@@ -11,11 +11,17 @@ module Cloud.Compute.AWS.Lambda (
 
 import Data.Functor.Identity(Identity(..), runIdentity)
 import Control.Applicative (liftA2)
+import Control.Monad (when)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
 
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Reader
+
+import Data.ByteString (ByteString)
+import Data.ByteString.Lazy (toStrict)
+import Foreign.C (CString, newCString)
+import Data.Aeson (FromJSON, ToJSON, decodeStrict, encode)
 
 type Lambda evt err a = LambdaT evt err Identity a
 
@@ -42,3 +48,42 @@ nogood = Wrap . lift . throwE
 
 instance MonadTrans (LambdaT evt err) where
     lift = liftLambdaT
+
+-- type AWSLambda i o = i -> IO o
+
+-- type AWSLambdaIntegration = AWSLambda CString CString
+
+encodeStrict :: (ToJSON a) => a -> ByteString
+encodeStrict = toStrict . encode
+
+interop ::(ByteString -> IO ByteString) -> CString -> IO CString
+interop = error "Not yet implemented"
+
+toSerial :: (FromJSON input, ToJSON output, ToJSON error, ToJSON invalid) => invalid -> (input -> IO (Either output error)) -> ByteString -> IO ByteString
+toSerial inv f bytes = do
+    let maybeInput = decodeStrict bytes
+    case maybeInput of
+        Just input -> do
+            result <- f input
+            pure $ either encodeStrict encodeStrict result
+        _ -> pure (encodeStrict inv)
+
+toLambda :: (FromJSON evt, ToJSON a, ToJSON err) => (forall b. m b -> n b) -> LambdaT evt err m a -> evt -> n (Either err a)
+toLambda interpret handle event = interpret (runLambdaT handle event)
+
+demoHandle :: LambdaT Int String IO [Int]
+demoHandle = do
+    n <- argument
+    when (n > 20) (nogood "number is too big")
+    pure [1..n]
+
+demoLambda :: Int -> IO (Either String [Int])
+demoLambda = toLambda id demoHandle
+
+demoInterop :: CString -> IO CString
+demoInterop =
+    let invalid = "no parse" :: String
+    in (interop . toSerial invalid ) demoLambda
+
+
+
