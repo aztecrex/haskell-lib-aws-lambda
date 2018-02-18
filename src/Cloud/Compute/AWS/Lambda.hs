@@ -5,6 +5,7 @@ module Cloud.Compute.AWS.Lambda (
     liftLambdaT,
     argument,
     nogood,
+    Lambda,
     LambdaT
 ) where
 
