@@ -7,7 +7,7 @@ Convenient model for AWS Lambda Functions.
 ### LambdaT transformer
 
 I have been experimenting with the shape. The most aesthetic to me so far is
-a `Reader` + `Except` ( `event -> Eeither error result` ). This is encoded in the
+a `Reader` + `Except` ( `event -> Either error result` ). This is encoded in the
 `LambdaT` type.
 
 The module contains functions to convert a LambdaT or corresponding handler
