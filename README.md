@@ -12,7 +12,7 @@ a `Reader` + `Except` ( `event -> m (Either error result)` ). This is encoded in
 
 The module contains functions to convert a LambdaT or corresponding handler
 into a function suitable for export, `CString -> IO CString`. These functions expect the
-event, error, and result types to be instances of FromJSON, ToJSON, and ToJSON respectively.
+event, error, and result types to be instances of `FromJSON`, `ToJSON`, and `ToJSON` respectively.
 
 ### Context
 
