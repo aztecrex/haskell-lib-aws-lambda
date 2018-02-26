@@ -59,8 +59,8 @@ instance MonadTrans (LambdaT evt err) where
 
 -- type AWSLambdaIntegration = AWSLambda CString CString
 
-interop ::(ByteString -> IO ByteString) -> CString -> IO CString
-interop f input = packCString input >>= f >>= unpackCString
+interop ::(ByteString -> IO ByteString) -> CString -> CString -> IO CString
+interop f _ input = packCString input >>= f >>= unpackCString
 
 toSerial :: (FromJSON input, ToJSON output, ToJSON error, ToJSON invalid) => invalid -> (input -> IO (Either output error)) -> ByteString -> IO ByteString
 toSerial inv f bytes = do
@@ -83,7 +83,7 @@ demoHandle = do
 demoLambda :: Int -> IO (Either String [Int])
 demoLambda = toLambda id demoHandle
 
-demoInterop :: CString -> IO CString
+demoInterop :: CString -> CString -> IO CString
 demoInterop =
     let invalid = "no parse" :: String
     in (interop . toSerial invalid ) demoLambda
