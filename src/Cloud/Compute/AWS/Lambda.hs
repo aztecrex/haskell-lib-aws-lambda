@@ -4,6 +4,7 @@ module Cloud.Compute.AWS.Lambda (
     runLambdaT,
     liftLambdaT,
     argument,
+    context,
     nogood,
     Lambda,
     LambdaT,
@@ -11,6 +12,7 @@ module Cloud.Compute.AWS.Lambda (
     interop
 ) where
 
+-- import Data.Default (Default, def)
 import Data.Functor.Identity(Identity(..), runIdentity)
 import Control.Applicative (liftA2)
 import Control.Monad (when)
@@ -28,62 +30,92 @@ import Foreign.C (CString, newCString)
 import Data.Aeson (FromJSON, ToJSON, decodeStrict, encode)
 
 
+-- newtype Context = Context String
+-- instance Default Context where
+--     def = "Default Context"
 
-type Lambda evt err a = LambdaT evt err Identity a
+type Lambda ctx evt err a = LambdaT ctx evt err Identity a
 
-runLambda :: Lambda evt err a -> evt -> Either err a
-runLambda lambda event = runIdentity (runLambdaT lambda event)
+runLambda :: Lambda ctx evt err a -> ctx -> evt -> Either err a
+runLambda lambda context event = runIdentity (runLambdaT lambda context event)
 
-liftLambda :: a -> Lambda evt err a
+liftLambda :: a -> Lambda ctx evt err a
 liftLambda = liftLambdaT . pure
 
-newtype LambdaT evt err m a = Wrap { unwrap :: ReaderT evt (ExceptT  err m) a }
+newtype LambdaT ctx evt err m a = Wrap { unwrap :: ReaderT (evt, ctx) (ExceptT err m) a }
     deriving (Functor, Applicative, Monad, MonadIO)
 
-runLambdaT :: LambdaT evt err m a -> evt -> m (Either err a)
-runLambdaT lambda = runExceptT . runReaderT (unwrap lambda)
+runLambdaT :: LambdaT ctx evt err m a -> ctx -> evt -> m (Either err a)
+runLambdaT lambda c e = ( runExceptT . runReaderT (unwrap lambda) ) (e, c)
 
-liftLambdaT :: (Monad m) => m a -> LambdaT evt err m a
+liftLambdaT :: (Monad m) => m a -> LambdaT ctx evt err m a
 liftLambdaT = Wrap . lift . lift
 
-argument :: (Monad m) => LambdaT evt err m evt
-argument = Wrap (lift . pure =<< ask)
+argument :: (Monad m) => LambdaT ctx evt err m evt
+argument = fst <$> Wrap (lift . pure =<< ask)
 
-nogood :: (Monad m) => err -> LambdaT evt err m a
+context :: (Monad m) => LambdaT ctx evt err m ctx
+context = snd <$> Wrap (lift . pure =<< ask)
+
+nogood :: (Monad m) => err -> LambdaT ctx evt err m a
 nogood = Wrap . lift . throwE
 
-instance MonadTrans (LambdaT evt err) where
+instance MonadTrans (LambdaT ctx evt err) where
     lift = liftLambdaT
 
 -- type AWSLambda i o = i -> IO o
 
 -- type AWSLambdaIntegration = AWSLambda CString CString
 
-interop ::(ByteString -> IO ByteString) -> CString -> IO CString
-interop f input = packCString input >>= f >>= unpackCString
+interop ::(ByteString -> ByteString -> IO ByteString) -> CString -> CString -> IO CString
+interop f context input = do
+        context' <- packCString context
+        input' <- packCString input
+        result' <- f context' input'
+        unpackCString result'
 
-toSerial :: (FromJSON input, ToJSON output, ToJSON error, ToJSON invalid) => invalid -> (input -> IO (Either output error)) -> ByteString -> IO ByteString
-toSerial inv f bytes = do
-    let maybeInput = decodeStrict bytes
-    case maybeInput of
-        Just input -> do
-            result <- f input
-            pure $ either encodeStrict encodeStrict result
-        _ -> pure (encodeStrict inv)
+toSerial :: (FromJSON input, FromJSON context, ToJSON output, ToJSON error, ToJSON invalid)
+  => invalid
+  -> (context -> input -> IO (Either output error))
+  -> ByteString
+  -> ByteString
+  -> IO ByteString
+toSerial inv f cbytes ibytes = do
+    let maybeContext = decodeStrict cbytes
+        maybeInput = decodeStrict ibytes
+        maybeIOResult = do
+            context <- maybeContext
+            input <- maybeInput
+            pure $ f context input
+    case maybeIOResult of
+            Just result -> either encodeStrict encodeStrict <$> result
+            _ -> pure $ encodeStrict inv
 
-toLambda :: (FromJSON evt, ToJSON a, ToJSON err) => (forall b. m b -> n b) -> LambdaT evt err m a -> evt -> n (Either err a)
-toLambda interpret handle event = interpret (runLambdaT handle event)
+    -- when (isNothing maybeContext)
+    --     pure (encodeStrict inv)
+    -- when (isNothing maybeInput)
+    --     pure (encodeStrict inv)
+    -- result <- f (fromJust maybeContext) (fromJust maybeInput)
+    -- pure $ either encodeStrict encodeStrict result
 
-demoHandle :: LambdaT Int String IO [Int]
+toLambda :: (FromJSON evt, FromJSON ctx, ToJSON a, ToJSON err)
+    => (forall b. m b -> n b)
+    -> LambdaT ctx evt err m a
+    -> ctx
+    -> evt
+    -> n (Either err a)
+toLambda interpret handle context event = interpret (runLambdaT handle context event)
+
+demoHandle :: LambdaT String Int String IO [Int]
 demoHandle = do
     n <- argument
     when (n > 20) (nogood "number is too big")
     pure [1..n]
 
-demoLambda :: Int -> IO (Either String [Int])
+demoLambda :: String -> Int -> IO (Either String [Int])
 demoLambda = toLambda id demoHandle
 
-demoInterop :: CString -> IO CString
+demoInterop :: CString -> CString -> IO CString
 demoInterop =
     let invalid = "no parse" :: String
     in (interop . toSerial invalid ) demoLambda

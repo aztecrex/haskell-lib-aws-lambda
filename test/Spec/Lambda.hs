@@ -10,7 +10,7 @@ import Control.Monad.Trans.Class (lift)
 import Control.Monad.IO.Class (liftIO)
 
 
-import Cloud.Compute.AWS.Lambda (runLambdaT, liftLambdaT, runLambda, liftLambda, argument, nogood, LambdaT)
+import Cloud.Compute.AWS.Lambda (runLambdaT, liftLambdaT, runLambda, liftLambda, argument, context, nogood, LambdaT)
 
 
 assertRight :: (Eq a, Show a) => Either e a -> a -> Assertion
@@ -36,14 +36,22 @@ tests = testGroup "Lambda" [
         -- when
             lambda = liftLambdaT (Identity embedded)
         -- then
-        runIdentity (runLambdaT lambda "anything") @?>= embedded,
+        runIdentity (runLambdaT lambda "anyc" "anyi") @?>= embedded,
 
     testCase "extract argument" $ do
         let input = "input"
         -- when
             actual = argument
         -- then
-        runLambda actual input @?>= input,
+        runLambda actual "any" input @?>= input,
+
+    testCase "extract context" $ do
+        -- given
+        let contextV = "a context"
+        -- when
+            actual = context
+        -- then
+        runLambda actual contextV "anyi" @?>= contextV,
 
     testCase "functor" $ do
         let embedded = 19
@@ -52,31 +60,31 @@ tests = testGroup "Lambda" [
         -- when
             actual = transform <$> lambda
         -- then
-        runLambda actual "anything" @?>= transform embedded,
+        runLambda actual "anyc" "anyi" @?>= transform embedded,
 
     testCase "failure" $ do
         let err = "epic fail"
         -- when
             actual = nogood err
-        runLambda actual "anything" @?<= err,
+        runLambda actual "anyc" "anyi" @?<= err,
 
-        testCase "applicative" $ do
-        let embedded1 = 19
-            lambda1 = liftLambda embedded1
-            embedded2 = 119
-            lambda2 = liftLambda embedded2
-            op = (+)
-        -- when
-            actual = liftA2 op lambda1 lambda2
-        -- then
-        runLambda actual "anything" @?>= op embedded1 embedded2,
+    testCase "applicative" $ do
+    let embedded1 = 19
+        lambda1 = liftLambda embedded1
+        embedded2 = 119
+        lambda2 = liftLambda embedded2
+        op = (+)
+    -- when
+        actual = liftA2 op lambda1 lambda2
+    -- then
+    runLambda actual "anyc" "anyi" @?>= op embedded1 embedded2,
 
     testCase "monad return" $ do
         let embedded = 919
         -- when
             actual = return embedded
         -- then
-        runLambda actual "anything" @?>= embedded,
+        runLambda actual "anyc" "anyi" @?>= embedded,
 
     testCase "monad bind (continue)" $ do
         let embedded = 920
@@ -85,7 +93,7 @@ tests = testGroup "Lambda" [
             f a = pure (op a)
         -- when
             actual = orig >>= f
-        runLambda actual "anything" @?>= op embedded,
+        runLambda actual "anyc" "anyi" @?>= op embedded,
 
     testCase "monad bind (failed)" $ do
         let err = "stop here"
@@ -94,7 +102,7 @@ tests = testGroup "Lambda" [
             f a = pure (op a)
         -- when
             actual = orig >>= f
-        runLambda actual "anything" @?<= err,
+        runLambda actual "anyc" "anyi" @?<= err,
 
     testCase "monad trans" $ do
         let inner a = do
@@ -103,16 +111,16 @@ tests = testGroup "Lambda" [
             program = do
                 x <- argument
                 lift (inner x)
-        runReader (runLambdaT program 150) 150 @?>= True
-        runReader (runLambdaT program 150) 151 @?>= False,
+        runReader (runLambdaT program "any" 150) 150 @?>= True
+        runReader (runLambdaT program "any" 150) 151 @?>= False,
 
     testCase "monad IO" $ do
         let v = 131
             op = (* 17)
-            program :: LambdaT String String IO Int = do
+            program :: LambdaT String String String IO Int = do
                 x <- liftIO (pure v)
                 pure $ op x
-        runLambdaT program "anything" >> pure (), -- compilation is verification, this just runs it
+        runLambdaT program "anyc" "anyi" >> pure (), -- compilation is verification, this just runs it
 
     testCase "demo" $ do
         let input = 30
@@ -121,6 +129,6 @@ tests = testGroup "Lambda" [
             actual = do
                 x <- argument
                 pure $ op x
-        runLambda actual input @?>= op input
+        runLambda actual "anyc" input @?>= op input
 
     ]
