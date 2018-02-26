@@ -5,6 +5,7 @@ module Cloud.Compute.AWS.Lambda (
     liftLambdaT,
     argument,
     context,
+    functionName,
     nogood,
     Lambda,
     LambdaT,
@@ -140,3 +141,8 @@ unpackCString bytes = useAsCString bytes replace
 encodeStrict :: ToJSON a => a -> ByteString
 encodeStrict = toStrict . encode
 
+class FunctionInfo m where
+    functionName :: m String
+
+instance (Monad m) => FunctionInfo (LambdaT String evt err m) where
+    functionName = context

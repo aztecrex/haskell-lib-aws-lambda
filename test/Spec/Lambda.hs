@@ -10,7 +10,7 @@ import Control.Monad.Trans.Class (lift)
 import Control.Monad.IO.Class (liftIO)
 
 
-import Cloud.Compute.AWS.Lambda (runLambdaT, liftLambdaT, runLambda, liftLambda, argument, context, nogood, LambdaT)
+import Cloud.Compute.AWS.Lambda (runLambdaT, liftLambdaT, runLambda, liftLambda, argument, context, nogood, LambdaT, functionName)
 
 
 assertRight :: (Eq a, Show a) => Either e a -> a -> Assertion
@@ -52,6 +52,14 @@ tests = testGroup "Lambda" [
             actual = context
         -- then
         runLambda actual contextV "anyi" @?>= contextV,
+
+    testCase "extract function name" $ do
+        -- given
+        let name = "function name"
+        -- when
+            actual = functionName
+        -- then
+        runLambda actual name "any" @?>= name,
 
     testCase "functor" $ do
         let embedded = 19
