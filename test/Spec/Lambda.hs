@@ -10,7 +10,7 @@ import Control.Monad.Trans.Class (lift)
 import Control.Monad.IO.Class (liftIO)
 
 
-import Cloud.Compute.AWS.Lambda (runLambdaT, liftLambdaT, runLambda, liftLambda, argument, context, nogood, LambdaT, operationName, operationVersion)
+import Cloud.Compute.AWS.Lambda (runLambdaT, liftLambdaT, runLambda, liftLambda, argument, context, nogood, LambdaT, OperationInfo (..))
 
 
 assertRight :: (Eq a, Show a) => Either e a -> a -> Assertion
@@ -59,7 +59,7 @@ tests = testGroup "Lambda" [
         -- when
             actual = operationName
         -- then
-        runLambda actual name "any" @?>= name,
+        runLambda actual (Name name) "any" @?>= name,
 
     testCase "extract operation version" $ do
         -- given
@@ -67,7 +67,7 @@ tests = testGroup "Lambda" [
         -- when
             actual = operationVersion
         -- then
-        runLambda actual version "any" @?>= version,
+        runLambda actual (Version version) "any" @?>= version,
 
     testCase "functor" $ do
         let embedded = 19
@@ -148,3 +148,17 @@ tests = testGroup "Lambda" [
         runLambda actual "anyc" input @?>= op input
 
     ]
+
+newtype Name = Name String deriving (Eq, Show)
+newtype Version = Version String deriving (Eq, Show)
+
+instance (Monad m) => OperationInfo (LambdaT Name evt err m) where
+    operationName = unwrap <$> context
+        where unwrap (Name v) = v
+    operationVersion = pure "this op has no version"
+
+instance (Monad m) => OperationInfo (LambdaT Version evt err m) where
+    operationName = pure "this op has no name"
+    operationVersion = unwrap <$> context
+        where unwrap (Version v) = v
+

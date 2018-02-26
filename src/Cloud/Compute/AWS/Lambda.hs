@@ -5,8 +5,7 @@ module Cloud.Compute.AWS.Lambda (
     liftLambdaT,
     argument,
     context,
-    operationName,
-    operationVersion,
+    OperationInfo (..),
     nogood,
     Lambda,
     LambdaT,
@@ -138,12 +137,6 @@ encodeStrict = toStrict . encode
 class OperationInfo m where
     operationName :: m String
     operationVersion :: m String
-
-
-instance (Monad m) => OperationInfo (LambdaT String evt err m) where
-    operationName = context
-    operationVersion = context
-
 
 -- data LambdaContext = LC {
 --     functionName :: String,
