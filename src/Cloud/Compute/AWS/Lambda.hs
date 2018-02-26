@@ -6,6 +6,7 @@ module Cloud.Compute.AWS.Lambda (
     argument,
     context,
     functionName,
+    functionVersion,
     nogood,
     Lambda,
     LambdaT,
@@ -143,6 +144,8 @@ encodeStrict = toStrict . encode
 
 class FunctionInfo m where
     functionName :: m String
+    functionVersion :: m String
 
 instance (Monad m) => FunctionInfo (LambdaT String evt err m) where
     functionName = context
+    functionVersion = context
