@@ -7,7 +7,7 @@ Convenient model for AWS Lambda Functions.
 ### LambdaT transformer
 
 I have been experimenting with the shape. The most aesthetic to me so far is
-a `Reader` + `Except` ( `event -> m (Either error result)` ). This is encoded in the
+a `Reader` + `Except` ( `(event,  context) -> m (Either error result)` ). This is encoded in the
 `LambdaT` type.
 
 The module contains functions to convert a LambdaT or corresponding handler
@@ -16,12 +16,11 @@ event, error, and result types to be instances of `FromJSON`, `ToJSON`, and `ToJ
 
 ### Context
 
-The shape will support context, I think, and that's what I'll work on next. The addition
-of context will make the computation something like
-`(event, Context) -> Either error result` . One thing I will experiment with is
-exposing Context directly vs functions that close over it. For example, in
-IO, Context could support a function that returns the remaining time to perform the
-computation. I am thinking that function might be more conveniently exposed as
+The transformer now includes context. This is passed from python as a simple dictionary and
+there is not yet a data type in the library that matches. 
+The next thing to experiment with is exposing context directly vs functions that close over it.
+For example, in IO, context could support a function that returns the remaining time to perform the
+computation. I am thinking that such functions might be more conveniently exposed as
 a simple effect in the monad rather than requiring the user to obtain the context
 and pass it to the function.
 
