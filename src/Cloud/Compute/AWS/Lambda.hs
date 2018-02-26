@@ -5,6 +5,7 @@ module Cloud.Compute.AWS.Lambda (
     liftLambdaT,
     argument,
     context,
+    OperationInfo (..),
     nogood,
     Lambda,
     LambdaT,
@@ -12,7 +13,7 @@ module Cloud.Compute.AWS.Lambda (
     interop
 ) where
 
--- import Data.Default (Default, def)
+import Data.Default (Default, def)
 import Data.Functor.Identity(Identity(..), runIdentity)
 import Control.Applicative (liftA2)
 import Control.Monad (when)
@@ -91,13 +92,6 @@ toSerial inv f cbytes ibytes = do
             Just result -> either encodeStrict encodeStrict <$> result
             _ -> pure $ encodeStrict inv
 
-    -- when (isNothing maybeContext)
-    --     pure (encodeStrict inv)
-    -- when (isNothing maybeInput)
-    --     pure (encodeStrict inv)
-    -- result <- f (fromJust maybeContext) (fromJust maybeInput)
-    -- pure $ either encodeStrict encodeStrict result
-
 toLambda :: (FromJSON evt, FromJSON ctx, ToJSON a, ToJSON err)
     => (forall b. m b -> n b)
     -> LambdaT ctx evt err m a
@@ -140,3 +134,18 @@ unpackCString bytes = useAsCString bytes replace
 encodeStrict :: ToJSON a => a -> ByteString
 encodeStrict = toStrict . encode
 
+class OperationInfo m where
+    operationName :: m String
+    operationVersion :: m String
+
+-- data LambdaContext = LC {
+--     functionName :: String,
+--     functionVersion :: String
+-- }
+
+-- instance Default LambdaContext where
+--     def = LC "unknown-name" "unknown-version"
+
+-- instance (Monad m) => OperationInfo (LambdaT LambdaContext evt err m) where
+--     operationName = functionName <$> context
+--     operationVersion = functionVersion <$> context
