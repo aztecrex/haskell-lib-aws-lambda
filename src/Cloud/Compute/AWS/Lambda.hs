@@ -1,14 +1,4 @@
 module Cloud.Compute.AWS.Lambda (
-    runLambda,
-    liftLambda,
-    runLambdaT,
-    liftLambdaT,
-    argument,
-    context,
-    OperationInfo (..),
-    nogood,
-    Lambda,
-    LambdaT,
     toSerial,
     interop
 ) where
@@ -30,43 +20,8 @@ import Data.ByteString.Lazy (toStrict)
 import Foreign.C (CString, newCString)
 import Data.Aeson (FromJSON, ToJSON, decodeStrict, encode)
 
+import Cloud.Compute (ComputeT, runComputeT, abort, event)
 
--- newtype Context = Context String
--- instance Default Context where
---     def = "Default Context"
-
-type Lambda ctx evt err a = LambdaT ctx evt err Identity a
-
-runLambda :: Lambda ctx evt err a -> ctx -> evt -> Either err a
-runLambda lambda context event = runIdentity (runLambdaT lambda context event)
-
-liftLambda :: a -> Lambda ctx evt err a
-liftLambda = liftLambdaT . pure
-
-newtype LambdaT ctx evt err m a = Wrap { unwrap :: ReaderT (evt, ctx) (ExceptT err m) a }
-    deriving (Functor, Applicative, Monad, MonadIO)
-
-runLambdaT :: LambdaT ctx evt err m a -> ctx -> evt -> m (Either err a)
-runLambdaT lambda c e = ( runExceptT . runReaderT (unwrap lambda) ) (e, c)
-
-liftLambdaT :: (Monad m) => m a -> LambdaT ctx evt err m a
-liftLambdaT = Wrap . lift . lift
-
-argument :: (Monad m) => LambdaT ctx evt err m evt
-argument = fst <$> Wrap (lift . pure =<< ask)
-
-context :: (Monad m) => LambdaT ctx evt err m ctx
-context = snd <$> Wrap (lift . pure =<< ask)
-
-nogood :: (Monad m) => err -> LambdaT ctx evt err m a
-nogood = Wrap . lift . throwE
-
-instance MonadTrans (LambdaT ctx evt err) where
-    lift = liftLambdaT
-
--- type AWSLambda i o = i -> IO o
-
--- type AWSLambdaIntegration = AWSLambda CString CString
 
 interop ::(ByteString -> ByteString -> IO ByteString) -> CString -> CString -> IO CString
 interop f context input = do
@@ -94,16 +49,16 @@ toSerial inv f cbytes ibytes = do
 
 toLambda :: (FromJSON evt, FromJSON ctx, ToJSON a, ToJSON err)
     => (forall b. m b -> n b)
-    -> LambdaT ctx evt err m a
+    -> ComputeT ctx evt err m a
     -> ctx
     -> evt
     -> n (Either err a)
-toLambda interpret handle context event = interpret (runLambdaT handle context event)
+toLambda interpret handle context event = interpret (runComputeT handle context event)
 
-demoHandle :: LambdaT String Int String IO [Int]
+demoHandle :: ComputeT String Int String IO [Int]
 demoHandle = do
-    n <- argument
-    when (n > 20) (nogood "number is too big")
+    n <- event
+    when (n > 20) (abort "number is too big")
     pure [1..n]
 
 demoLambda :: String -> Int -> IO (Either String [Int])
@@ -134,18 +89,3 @@ unpackCString bytes = useAsCString bytes replace
 encodeStrict :: ToJSON a => a -> ByteString
 encodeStrict = toStrict . encode
 
-class OperationInfo m where
-    operationName :: m String
-    operationVersion :: m String
-
--- data LambdaContext = LC {
---     functionName :: String,
---     functionVersion :: String
--- }
-
--- instance Default LambdaContext where
---     def = LC "unknown-name" "unknown-version"
-
--- instance (Monad m) => OperationInfo (LambdaT LambdaContext evt err m) where
---     operationName = functionName <$> context
---     operationVersion = functionVersion <$> context
