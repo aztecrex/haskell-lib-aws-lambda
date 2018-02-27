@@ -23,6 +23,7 @@ dependencies:
   - aeson
   - bytestring
   - data-default
+  - time
 
 library:
   source-dirs: src
