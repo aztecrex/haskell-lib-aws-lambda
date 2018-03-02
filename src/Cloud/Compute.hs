@@ -15,8 +15,6 @@ import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.Trans.Reader (ReaderT, runReaderT, ask)
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
 import Control.Monad.IO.Class (MonadIO)
-import Data.Text (Text)
-import Data.Time.Clock (DiffTime)
 
 type Compute ctx evt err a = ComputeT ctx evt err Identity a
 

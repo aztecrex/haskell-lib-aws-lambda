@@ -1,7 +1,7 @@
 module Spec.Cloud.Compute (tests) where
 
 import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.HUnit (testCase, (@?=), assertBool, Assertion, assertFailure)
+import Test.Tasty.HUnit (testCase, (@?=), Assertion, assertFailure)
 
 import Data.Functor.Identity (Identity(..), runIdentity)
 import Control.Monad.Reader (ask, runReader)
