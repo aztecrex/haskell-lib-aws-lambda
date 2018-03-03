@@ -1,4 +1,4 @@
-module Cloud.Compute.AWS.Lambda (
+module Cloud.AWS.Lambda (
     toSerial,
     interop,
     toLambda

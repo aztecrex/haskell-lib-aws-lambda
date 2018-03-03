@@ -11,6 +11,8 @@ import Control.Monad.IO.Class (liftIO)
 
 import Cloud.Compute (runComputeT, liftComputeT, runCompute, liftCompute, event, context, abort, ComputeT)
 
+import qualified Spec.Cloud.Compute.Ephemeral as Ephemeral (tests)
+
 tests :: TestTree
 tests = testGroup "Compute" [
 
@@ -110,7 +112,9 @@ tests = testGroup "Compute" [
             actual = do
                 x <- event
                 pure $ op x
-        runCompute actual "anyc" input @?>= op input
+        runCompute actual "anyc" input @?>= op input,
+
+    Ephemeral.tests
 
     ]
 

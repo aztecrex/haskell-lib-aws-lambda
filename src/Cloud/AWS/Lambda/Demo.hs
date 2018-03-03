@@ -1,9 +1,9 @@
-module Cloud.Compute.AWS.Lambda.Demo where
+module Cloud.AWS.Lambda.Demo where
 
 import Control.Monad (when)
 
 import Cloud.Compute (ComputeT, abort, event)
-import Cloud.Compute.AWS.Lambda (toSerial, interop, toLambda)
+import Cloud.AWS.Lambda (toSerial, interop, toLambda)
 
 import Foreign.C (CString)
 
