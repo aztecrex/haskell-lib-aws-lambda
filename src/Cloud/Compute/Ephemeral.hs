@@ -19,6 +19,7 @@ class MonadEphemeralTimer m where
 
 class EphemeralInfo a where
     functionName :: a -> Text
+    functionVersion :: a -> Text
 
 -- class EphemeralTimer a where
 --     functionTimeLeft :: a -> UTCTime -> DiffTime
@@ -26,6 +27,6 @@ class EphemeralInfo a where
 
 instance (Monad m, EphemeralInfo ctx) => MonadEphemeralInfo (ComputeT ctx evt err m) where
     name = functionName <$> context
-    version = error "not implemented"
+    version = functionVersion <$> context
     invocation = error "not implemented"
 
