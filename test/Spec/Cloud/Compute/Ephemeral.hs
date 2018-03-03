@@ -1,7 +1,8 @@
 module Spec.Cloud.Compute.Ephemeral (tests) where
 
 import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.HUnit (testCase, (@?=), Assertion, assertFailure)
+import Test.Tasty.HUnit (testCase)
+import Spec.TestHelp ((@?>=))
 
 import Data.Text (Text)
 
@@ -27,16 +28,3 @@ newtype Name = Name { unname :: Text } deriving (Eq, Show)
 instance EphemeralInfo Name where
     functionName = unname
 
-assertRight :: (Eq a, Show a) => Either e a -> a -> Assertion
-assertRight (Right actual) expected = actual @?= expected
-assertRight _ _ = assertFailure "should be Right"
-
-(@?>=) :: (Eq a, Show a) => Either e a -> a -> Assertion
-(@?>=) = assertRight
-
--- assertLeft :: (Eq e, Show e) => Either e a -> e -> Assertion
--- assertLeft (Left actual) expected = actual @?= expected
--- assertLeft _ _ = assertFailure "should be Left"
-
--- (@?<=) :: (Eq e, Show e) => Either e a -> e -> Assertion
--- (@?<=) = assertLeft
