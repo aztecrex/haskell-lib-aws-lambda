@@ -1,12 +1,15 @@
 module Cloud.Compute.Ephemeral (
-    MonadEphemeral (..),
-    MonadEphemeralTimer (..)
+    MonadEphemeralInfo (..),
+    MonadEphemeralTimer (..),
+    EphemeralInfo (..)
 ) where
 
 import Data.Text (Text)
-import Data.Time.Clock (DiffTime, UTCTime)
+import Data.Time.Clock (DiffTime, {-  UTCTime -} )
 
-class MonadEphemeral m where
+import Cloud.Compute (ComputeT, context)
+
+class MonadEphemeralInfo m where
     name :: m Text
     version :: m Text
     invocation :: m Text
@@ -14,12 +17,15 @@ class MonadEphemeral m where
 class MonadEphemeralTimer m where
     remainingTime :: m DiffTime
 
-class Ephemeral a where
+class EphemeralInfo a where
     functionName :: a -> Text
-    functionVersion :: a -> Text
-    funtionInvocation :: a -> Text
 
-class EphemeralTimer a where
-    functionTimeLeft :: a -> UTCTime -> DiffTime
+-- class EphemeralTimer a where
+--     functionTimeLeft :: a -> UTCTime -> DiffTime
 
+
+instance (Monad m, EphemeralInfo ctx) => MonadEphemeralInfo (ComputeT ctx evt err m) where
+    name = functionName <$> context
+    version = error "not implemented"
+    invocation = error "not implemented"
 
