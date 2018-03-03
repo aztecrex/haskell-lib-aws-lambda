@@ -7,7 +7,7 @@ import Spec.TestHelp ((@?>=))
 import Data.Text (Text)
 
 import Cloud.Compute (runCompute)
-import Cloud.Compute.Ephemeral (EphemeralInfo (..), name, version)
+import Cloud.Compute.Ephemeral (EphemeralInfo (..), name, version, invocation)
 
 tests :: TestTree
 tests = testGroup "Ephemeral" [
@@ -27,19 +27,36 @@ tests = testGroup "Ephemeral" [
             -- when
                 actual = version
             -- then
-            runCompute actual ctx "any" @?>= versionv
-    ]
+            runCompute actual ctx "any" @?>= versionv,
+
+        testCase "extract invocation" $ do
+            -- given
+            let invocationv = "function invocation"
+                ctx = Invocation invocationv
+            -- when
+                actual = invocation
+            -- then
+            runCompute actual ctx "any" @?>= invocationv
+
+
+      ]
 
 
 newtype Name = Name { unname :: Text } deriving (Eq, Show)
-
 instance EphemeralInfo Name where
     functionName = unname
     functionVersion = error "not implemented"
+    functionInvocation = error "not implemented"
 
 newtype Version = Version { unversion :: Text } deriving (Eq, Show)
-
 instance EphemeralInfo Version where
     functionVersion = unversion
     functionName = error "not implemented"
+    functionInvocation = error "not implemented"
+
+newtype Invocation = Invocation { uninvocation :: Text } deriving (Eq, Show)
+instance EphemeralInfo Invocation where
+    functionInvocation = uninvocation
+    functionName = error "not implemented"
+    functionVersion = error "not implemented"
 
