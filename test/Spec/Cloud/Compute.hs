@@ -1,7 +1,7 @@
 module Spec.Cloud.Compute (tests) where
 
 import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.HUnit (testCase, (@?=), assertBool, Assertion, assertFailure)
+import Test.Tasty.HUnit (testCase, (@?=), Assertion, assertFailure)
 
 import Data.Functor.Identity (Identity(..), runIdentity)
 import Control.Monad.Reader (ask, runReader)
@@ -10,6 +10,8 @@ import Control.Monad.Trans.Class (lift)
 import Control.Monad.IO.Class (liftIO)
 
 import Cloud.Compute (runComputeT, liftComputeT, runCompute, liftCompute, event, context, abort, ComputeT)
+
+import qualified Spec.Cloud.Compute.Ephemeral as Ephemeral (tests)
 
 tests :: TestTree
 tests = testGroup "Compute" [
@@ -110,7 +112,9 @@ tests = testGroup "Compute" [
             actual = do
                 x <- event
                 pure $ op x
-        runCompute actual "anyc" input @?>= op input
+        runCompute actual "anyc" input @?>= op input,
+
+    Ephemeral.tests
 
     ]
 

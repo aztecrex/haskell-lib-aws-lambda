@@ -4,7 +4,7 @@ module Cloud.Compute.Ephemeral (
 ) where
 
 import Data.Text (Text)
-import Data.Time.Clock (DiffTime)
+import Data.Time.Clock (DiffTime, UTCTime)
 
 class MonadEphemeral m where
     name :: m Text
@@ -13,4 +13,13 @@ class MonadEphemeral m where
 
 class MonadEphemeralTimer m where
     remainingTime :: m DiffTime
+
+class Ephemeral a where
+    functionName :: a -> Text
+    functionVersion :: a -> Text
+    funtionInvocation :: a -> Text
+
+class EphemeralTimer a where
+    functionTimeLeft :: a -> UTCTime -> DiffTime
+
 
