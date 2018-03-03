@@ -44,7 +44,7 @@ tests = testGroup "Compute" [
             actual = abort err
         runCompute actual "anyc" "anyi" @?<= err,
 
-        testCase "functor" $ do
+    testCase "functor" $ do
         let embedded = 19
             transform = (+1)
             lambda = liftCompute embedded
