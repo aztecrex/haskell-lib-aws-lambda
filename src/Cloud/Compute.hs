@@ -1,10 +1,8 @@
 module Cloud.Compute (
     Compute,
     runCompute,
-    liftCompute,
     ComputeT,
     runComputeT,
-    liftComputeT,
     MonadCompute (..),
 ) where
 
@@ -20,9 +18,6 @@ type Compute ctx evt err a = ComputeT ctx evt err Identity a
 
 runCompute :: Compute ctx evt err a -> ctx -> evt -> Either err a
 runCompute computation context event = runIdentity (runComputeT computation context event)
-
-liftCompute :: a -> Compute ctx evt err a
-liftCompute = liftComputeT . pure
 
 newtype ComputeT ctx evt err m a = Wrap { unwrap :: ReaderT (evt, ctx) (ExceptT err m) a }
     deriving (Functor, Applicative, Monad, MonadIO)
