@@ -15,7 +15,9 @@ import Data.Time.Calendar (Day (ModifiedJulianDay) )
 import Data.Time.Clock (UTCTime (..), diffUTCTime)
 
 import Cloud.Compute (runCompute, runComputeT)
-import Cloud.Compute.Ephemeral (EphemeralInfo (..), MonadClock (..), CountDown (..), name, version, invocation, remainingTime)
+import Cloud.Compute.Ephemeral (
+    OperationContext (..), MonadClock (..), TimedOperationContext (..),
+    name, version, invocation, deadline, remainingTime)
 
 tests :: TestTree
 tests = testGroup "Ephemeral" [
@@ -46,9 +48,18 @@ tests = testGroup "Ephemeral" [
             -- then
             runCompute actual ctx "any" @?>= invocationv,
 
+        testCase "extract deadline" $ do
+            -- given
+            let deadlinev = UTCTime (ModifiedJulianDay 12001) 20
+                ctx = Deadline deadlinev
+            -- when
+                actual = deadline
+            -- then
+            runCompute actual ctx "any" @?>= deadlinev,
+
         testCase "compute remaining time" $ do
             -- given
-            let deadlinev = UTCTime (ModifiedJulianDay 12000) 19
+            let deadlinev = UTCTime (ModifiedJulianDay 12500) 19
                 now = UTCTime (ModifiedJulianDay 12300) 773
                 ctx = Deadline deadlinev
             -- when
@@ -60,26 +71,26 @@ tests = testGroup "Ephemeral" [
       ]
 
 newtype Name = Name { unname :: Text } deriving (Eq, Show)
-instance EphemeralInfo Name where
-    functionName = unname
-    functionVersion = error "not implemented"
-    functionInvocation = error "not implemented"
+instance OperationContext Name where
+    operationName = unname
+    operationVersion = error "not implemented"
+    operationInvocation = error "not implemented"
 
 newtype Version = Version { unversion :: Text } deriving (Eq, Show)
-instance EphemeralInfo Version where
-    functionVersion = unversion
-    functionName = error "not implemented"
-    functionInvocation = error "not implemented"
+instance OperationContext Version where
+    operationVersion = unversion
+    operationName = error "not implemented"
+    operationInvocation = error "not implemented"
 
 newtype Invocation = Invocation { uninvocation :: Text } deriving (Eq, Show)
-instance EphemeralInfo Invocation where
-    functionInvocation = uninvocation
-    functionName = error "not implemented"
-    functionVersion = error "not implemented"
+instance OperationContext Invocation where
+    operationInvocation = uninvocation
+    operationName = error "not implemented"
+    operationVersion = error "not implemented"
 
 newtype Deadline = Deadline { undeadline :: UTCTime } deriving (Eq, Show)
-instance CountDown Deadline where
-    deadline = undeadline
+instance TimedOperationContext Deadline where
+    operationDeadline = undeadline
 
 instance (Monad m) => MonadClock (ReaderT UTCTime m) where
     currentTime = ask

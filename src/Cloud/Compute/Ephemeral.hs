@@ -1,45 +1,47 @@
 module Cloud.Compute.Ephemeral (
-    MonadEphemeralInfo (..),
-    MonadEphemeralTimer (..),
-    EphemeralInfo (..),
+    MonadOperation (..),
+    MonadTimedOperation (..),
+    OperationContext (..),
+    TimedOperationContext (..),
     MonadClock (..),
-    CountDown (..)
+    remainingTime
 ) where
 
 import Control.Monad.Trans.Class (lift)
 import Data.Text (Text)
 import Data.Time.Clock (NominalDiffTime, UTCTime, diffUTCTime)
 
-
 import Cloud.Compute (ComputeT, context)
 
-class MonadEphemeralInfo m where
+class MonadOperation m where
     name :: m Text
     version :: m Text
     invocation :: m Text
 
-class MonadEphemeralTimer m where
-    remainingTime :: m NominalDiffTime
-
-class EphemeralInfo a where
-    functionName :: a -> Text
-    functionVersion :: a -> Text
-    functionInvocation :: a -> Text
+class MonadTimedOperation m where
+    deadline :: m UTCTime
 
 class MonadClock m where
     currentTime :: m UTCTime
 
-class CountDown a where
-    deadline :: a -> UTCTime
+remainingTime :: (Applicative m, MonadTimedOperation m, MonadClock m) => m NominalDiffTime
+remainingTime = diffUTCTime <$> deadline <*> currentTime
 
-instance (Monad m, EphemeralInfo ctx) => MonadEphemeralInfo (ComputeT ctx evt err m) where
-    name = functionName <$> context
-    version = functionVersion <$> context
-    invocation = functionInvocation <$> context
+class OperationContext a where
+    operationName :: a -> Text
+    operationVersion :: a -> Text
+    operationInvocation :: a -> Text
 
-instance (Monad m, MonadClock m, CountDown ctx) => MonadEphemeralTimer (ComputeT ctx evt err m) where
-    remainingTime = do
-        now <- lift currentTime
-        ctx <- context
-        pure $ diffUTCTime (deadline ctx) now
+class TimedOperationContext a where
+    operationDeadline :: a -> UTCTime
 
+instance (Monad m, OperationContext ctx) => MonadOperation (ComputeT ctx evt err m) where
+    name = operationName <$> context
+    version = operationVersion <$> context
+    invocation = operationInvocation <$> context
+
+instance (Monad m, TimedOperationContext ctx) => MonadTimedOperation (ComputeT ctx evt err m) where
+    deadline = operationDeadline <$> context
+
+instance (Monad m, MonadClock m) => MonadClock (ComputeT ctx evt err m) where
+    currentTime = lift currentTime
