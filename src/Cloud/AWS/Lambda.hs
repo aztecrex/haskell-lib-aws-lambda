@@ -1,23 +1,42 @@
 module Cloud.AWS.Lambda (
     toSerial,
     interop,
-    toLambda
+    toLambda,
+    LambdaContext (..)
 ) where
 
-import Data.Default (Default, def)
-import Data.Functor.Identity(Identity(..), runIdentity)
-import Control.Applicative (liftA2)
-import Control.Monad.Trans.Class (MonadTrans, lift)
 import Data.IORef (IORef, newIORef, atomicModifyIORef')
 import Foreign.Marshal.Alloc(free)
 
+import Cloud.Compute (ComputeT, runComputeT)
+import Cloud.Compute.Ephemeral (OperationContext (..))
+import Data.Aeson (FromJSON, ToJSON, decodeStrict, encode)
 import Data.ByteString (ByteString, packCString, useAsCString)
 import Data.ByteString.Lazy (toStrict)
+import Data.Default (Default (..))
+import Data.Text (Text)
 import Foreign.C (CString, newCString)
-import Data.Aeson (FromJSON, ToJSON, decodeStrict, encode)
+import GHC.Generics (Generic)
 
-import Cloud.Compute (ComputeT, runComputeT)
+data LambdaContext = LambdaContext {
+        lambdaName :: Text,
+        lambdaVersion :: Text,
+        lambdaInvocation :: Text
+    } deriving (Eq, Show, Generic)
 
+instance FromJSON LambdaContext
+
+instance Default LambdaContext where
+    def = LambdaContext {
+        lambdaName = "",
+        lambdaVersion = "",
+        lambdaInvocation = ""
+     }
+
+instance OperationContext LambdaContext where
+    operationName = lambdaName
+    operationVersion = lambdaVersion
+    operationInvocation = lambdaInvocation
 
 interop ::(ByteString -> ByteString -> IO ByteString) -> CString -> CString -> IO CString
 interop f context input = do
