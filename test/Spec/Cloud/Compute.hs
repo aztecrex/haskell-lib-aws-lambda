@@ -10,7 +10,7 @@ import Control.Applicative (liftA2)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.IO.Class (liftIO)
 
-import Cloud.Compute (runComputeT, liftComputeT, runCompute, liftCompute, event, context, abort, ComputeT)
+import Cloud.Compute (runComputeT, runCompute, event, context, abort, ComputeT)
 
 import qualified Spec.Cloud.Compute.Ephemeral as Ephemeral (tests)
 
@@ -20,7 +20,7 @@ tests = testGroup "Compute" [
     testCase "construct lambdaT from inner" $ do
         let embedded = 17
         -- when
-            lambda = liftComputeT (Identity embedded)
+            lambda = lift (Identity embedded)
         -- then
         runIdentity (runComputeT lambda "anyc" "anyi") @?>= embedded,
 
@@ -48,7 +48,7 @@ tests = testGroup "Compute" [
     testCase "functor" $ do
         let embedded = 19
             transform = (+1)
-            lambda = liftCompute embedded
+            lambda = pure embedded
         -- when
             actual = transform <$> lambda
         -- then
@@ -56,9 +56,9 @@ tests = testGroup "Compute" [
 
     testCase "applicative" $ do
     let embedded1 = 19
-        lambda1 = liftCompute embedded1
+        lambda1 = pure embedded1
         embedded2 = 119
-        lambda2 = liftCompute embedded2
+        lambda2 = pure embedded2
         op = (+)
     -- when
         actual = liftA2 op lambda1 lambda2
