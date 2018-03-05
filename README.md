@@ -19,24 +19,33 @@ A convenience type `Compute event error a` just bolts `ComputeT` onto `Identity`
 
 `MonadCompute ctx evt err m` provides access to the event and context:
 
-`event :: m evt`
-`context :: m ctx`
+```Haskell
+event :: m evt
+context :: m ctx
+```
 
 And provides a way to fail:
 
-`abort :: err -> m ()`
+```Haskell
+abort :: err -> m ()
+```
 
 ## Cloud.Compute.Ephemeral Module
 
+
 `MonadOperation m` provides context information:
 
-`name :: m Text` : name of the running operation
-`version :: m Text` : version of the running operation
-`invocation :: m Text` : invocation identifier of the running operation
+```Haskell
+name :: m Text       -- name of the running operation
+version :: m Text    -- version of the running operation
+invocation :: m Text -- invocation identifier of the running operation
+```
 
 `MonadTimedOperation m` provides access to  running operation's deadline:
 
-`deadline :: m UTCTime`
+```Haskell
+deadline :: m UTCTime   -- when the operation is scheduled to terminate
+```
 
 `MonadOperation` is automatically defined for `ComputeT` if the context is a
 `OperationContext` instance.
@@ -46,13 +55,16 @@ is a `TimedOperationContext` instance.
 
 `MonadClock m` exposes the current time:
 
-`currentTime :: m UTCTime`
+```Haskell
+currentTime :: m UTCTime
+```
 
 Any computation that is an instance of `MonadClock` and `MonadTimedOPeration` can provide
 the remaining time to complete:
 
-`remainingTime :: m NominalDiffTime`
-
+```Haskell
+remainingTime :: m NominalDiffTime
+```
 
 ## Cloud.AWS.Lambda Module
 
