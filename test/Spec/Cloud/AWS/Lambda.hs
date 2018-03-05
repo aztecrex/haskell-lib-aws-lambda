@@ -19,13 +19,22 @@ tests = testGroup "Lambda" [
         -- then
         actual @?= namev,
 
-    testCase "context operation name" $ do
+    testCase "context operation version" $ do
         -- given
         let versionv = "lambda version name"
             ctx = def { lambdaVersion = versionv }
         -- when
             actual = operationVersion ctx
         -- then
-        actual @?= versionv
+        actual @?= versionv,
+
+    testCase "context operation invocation" $ do
+        -- given
+        let invocationv = "lambda invocation id"
+            ctx = def { lambdaInvocation = invocationv }
+        -- when
+            actual = operationInvocation ctx
+        -- then
+        actual @?= invocationv
 
     ]

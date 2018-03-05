@@ -20,19 +20,21 @@ import Foreign.C (CString, newCString)
 
 data LambdaContext = LambdaContext {
         lambdaName :: Text,
-        lambdaVersion :: Text
+        lambdaVersion :: Text,
+        lambdaInvocation :: Text
     }
 
 instance Default LambdaContext where
     def = LambdaContext {
         lambdaName = "",
-        lambdaVersion = ""
+        lambdaVersion = "",
+        lambdaInvocation = ""
      }
 
 instance OperationContext LambdaContext where
     operationName = lambdaName
     operationVersion = lambdaVersion
-    operationInvocation = error "not yet implamented"
+    operationInvocation = lambdaInvocation
 
 interop ::(ByteString -> ByteString -> IO ByteString) -> CString -> CString -> IO CString
 interop f context input = do
