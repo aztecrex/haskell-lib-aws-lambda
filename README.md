@@ -12,7 +12,8 @@ implemented as Reader + Except. The reader context is a `(context, event)`.
 `runComputeT (ComputeT context event error m a)` accepts `context` and `event` as separate arguments and produces 
 `Either error a` .
 
-A convenience type `Compute event error a` just bolts `ComputeT` onto `Identity`.
+A convenience type `Compute event error a` just bolts `ComputeT` onto `Identity`. It can be run with
+`runCompute`.
 
 ### MonadCompute class
 
