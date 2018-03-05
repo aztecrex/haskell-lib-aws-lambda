@@ -105,6 +105,11 @@ Eventually, this may become the only context type supported for AWS Lambda. The 
 to add support for timed operations by making `LambdaContext` and instance of
 `TimedOperationContext`.
 
+## Example
+
+Working example that roughly tracks the progress of this project: https://github.com/aztecrex/haskell-aws-lambda
+
+
 ## Template Haskell
 
 Original ideas for TH did not work out well. I've come up with a slightly different
