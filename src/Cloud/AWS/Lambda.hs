@@ -16,13 +16,15 @@ import Data.ByteString.Lazy (toStrict)
 import Data.Default (Default (..))
 import Data.Text (Text)
 import Foreign.C (CString, newCString)
-
+import GHC.Generics (Generic)
 
 data LambdaContext = LambdaContext {
         lambdaName :: Text,
         lambdaVersion :: Text,
         lambdaInvocation :: Text
-    }
+    } deriving (Eq, Show, Generic)
+
+instance FromJSON LambdaContext
 
 instance Default LambdaContext where
     def = LambdaContext {
