@@ -2,7 +2,7 @@ module Cloud.AWS.Lambda (
     toSerial,
     interop,
     toLambda,
-    lambdaName
+    LambdaContext (..)
 ) where
 
 import Data.IORef (IORef, newIORef, atomicModifyIORef')
@@ -19,17 +19,19 @@ import Foreign.C (CString, newCString)
 
 
 data LambdaContext = LambdaContext {
-        lambdaName :: Text
+        lambdaName :: Text,
+        lambdaVersion :: Text
     }
 
 instance Default LambdaContext where
     def = LambdaContext {
-        lambdaName = ""
+        lambdaName = "",
+        lambdaVersion = ""
      }
 
 instance OperationContext LambdaContext where
     operationName = lambdaName
-    operationVersion = error "not yet implemented"
+    operationVersion = lambdaVersion
     operationInvocation = error "not yet implamented"
 
 interop ::(ByteString -> ByteString -> IO ByteString) -> CString -> CString -> IO CString

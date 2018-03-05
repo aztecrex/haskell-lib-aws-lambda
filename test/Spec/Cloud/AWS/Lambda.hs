@@ -4,19 +4,28 @@ import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (testCase, (@?=))
 
 import Data.Default (def)
-import Cloud.Compute.Ephemeral (operationName)
+import Cloud.Compute.Ephemeral (OperationContext (..))
 
-import Cloud.AWS.Lambda (lambdaName)
+import Cloud.AWS.Lambda (LambdaContext (..))
 
 tests :: TestTree
 tests = testGroup "Lambda" [
-        testCase "context operation name" $ do
-            -- given
-            let namev = "lambda function name"
-                ctx = def { lambdaName = namev }
-            -- when
-                actual = operationName ctx
-            -- then
-            actual @?= namev
+    testCase "context operation name" $ do
+        -- given
+        let namev = "lambda function name"
+            ctx = def { lambdaName = namev }
+        -- when
+            actual = operationName ctx
+        -- then
+        actual @?= namev,
+
+    testCase "context operation name" $ do
+        -- given
+        let versionv = "lambda version name"
+            ctx = def { lambdaVersion = versionv }
+        -- when
+            actual = operationVersion ctx
+        -- then
+        actual @?= versionv
 
     ]
