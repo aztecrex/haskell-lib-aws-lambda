@@ -123,4 +123,7 @@ code in the host language.
 
 ## Module Names and Hackage Categories
 
-Not sure what those should be yet.
+Haven't settled on it all yet but I expect this project will be divided into the parts that
+don't depend on AWS and the parts that do.
+
+
