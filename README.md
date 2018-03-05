@@ -74,6 +74,12 @@ the amount of time remaining to the operation:
 remainingTime :: (MonadClock m, MonadTimedOperation m) => m NominalDiffTime
 ```
 
+### Tracing
+
+Up next for this module is tracing support, such as is provided by the AWS X-Ray Lambda
+integration. Tracing can be used to enhance instrumentation by correlating ephemeral
+invocations.
+
 ## Cloud.AWS.Lambda Module
 
 ## toSerial and Friends
