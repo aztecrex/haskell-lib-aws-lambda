@@ -8,5 +8,6 @@ import qualified Spec.Cloud.AWS as AWS (tests)
 
 tests :: TestTree
 tests = testGroup "Cloud" [
-        Compute.tests
+        Compute.tests,
+        AWS.tests
     ]

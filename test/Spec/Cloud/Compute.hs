@@ -1,7 +1,8 @@
 module Spec.Cloud.Compute (tests) where
 
 import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.HUnit (testCase, (@?=), Assertion, assertFailure)
+import Test.Tasty.HUnit (testCase)
+import Spec.TestHelp ((@?>=), (@?<=))
 
 import Data.Functor.Identity (Identity(..), runIdentity)
 import Control.Monad.Reader (ask, runReader)
@@ -44,7 +45,7 @@ tests = testGroup "Compute" [
             actual = abort err
         runCompute actual "anyc" "anyi" @?<= err,
 
-        testCase "functor" $ do
+    testCase "functor" $ do
         let embedded = 19
             transform = (+1)
             lambda = liftCompute embedded
@@ -117,17 +118,3 @@ tests = testGroup "Compute" [
     Ephemeral.tests
 
     ]
-
-assertRight :: (Eq a, Show a) => Either e a -> a -> Assertion
-assertRight (Right actual) expected = actual @?= expected
-assertRight _ _ = assertFailure "should be Right"
-
-(@?>=) :: (Eq a, Show a) => Either e a -> a -> Assertion
-(@?>=) = assertRight
-
-assertLeft :: (Eq e, Show e) => Either e a -> e -> Assertion
-assertLeft (Left actual) expected = actual @?= expected
-assertLeft _ _ = assertFailure "should be Left"
-
-(@?<=) :: (Eq e, Show e) => Either e a -> e -> Assertion
-(@?<=) = assertLeft
