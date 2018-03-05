@@ -23,13 +23,10 @@ newtype ComputeT ctx evt err m a = Wrap { unwrap :: ReaderT (evt, ctx) (ExceptT 
     deriving (Functor, Applicative, Monad, MonadIO)
 
 instance MonadTrans (ComputeT ctx evt err) where
-    lift = liftComputeT
+    lift = Wrap . lift . lift
 
 runComputeT :: ComputeT ctx evt err m a -> ctx -> evt -> m (Either err a)
 runComputeT lambda c e = ( runExceptT . runReaderT (unwrap lambda) ) (e, c)
-
-liftComputeT :: (Monad m) => m a -> ComputeT ctx evt err m a
-liftComputeT = Wrap . lift . lift
 
 class MonadCompute ctx evt err m | m -> err ctx evt where
     event :: m evt
