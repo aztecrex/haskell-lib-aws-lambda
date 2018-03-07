@@ -9,19 +9,22 @@ import Data.IORef (IORef, newIORef, atomicModifyIORef')
 import Foreign.Marshal.Alloc(free)
 
 import Cloud.Compute (ComputeT, runComputeT)
-import Cloud.Compute.Ephemeral (OperationContext (..))
+import Cloud.Compute.Ephemeral (OperationContext (..), TimedOperationContext (..))
 import Data.Aeson (FromJSON, ToJSON, decodeStrict, encode)
 import Data.ByteString (ByteString, packCString, useAsCString)
 import Data.ByteString.Lazy (toStrict)
 import Data.Default (Default (..))
+import Data.Ratio ((%))
 import Data.Text (Text)
+import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Foreign.C (CString, newCString)
 import GHC.Generics (Generic)
 
 data LambdaContext = LambdaContext {
         lambdaName :: Text,
         lambdaVersion :: Text,
-        lambdaInvocation :: Text
+        lambdaInvocation :: Text,
+        lambdaDeadline :: Integer
     } deriving (Eq, Show, Generic)
 
 instance FromJSON LambdaContext
@@ -30,13 +33,17 @@ instance Default LambdaContext where
     def = LambdaContext {
         lambdaName = "",
         lambdaVersion = "",
-        lambdaInvocation = ""
+        lambdaInvocation = "",
+        lambdaDeadline = 0
      }
 
 instance OperationContext LambdaContext where
     operationName = lambdaName
     operationVersion = lambdaVersion
     operationInvocation = lambdaInvocation
+
+instance TimedOperationContext LambdaContext where
+    operationDeadline ctx = posixSecondsToUTCTime $ fromRational (lambdaDeadline ctx % 1000)
 
 interop ::(ByteString -> ByteString -> IO ByteString) -> CString -> CString -> IO CString
 interop f context input = do
