@@ -1,5 +1,5 @@
 name:                aws-lambda
-version:             0.5.0.0
+version:             0.6.0.0
 github:              "aztecrex/haskell-lib-aws-lambda"
 license:             BSD3
 author:              "Greg Wiley"
