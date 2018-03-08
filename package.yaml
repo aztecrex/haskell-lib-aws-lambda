@@ -1,5 +1,5 @@
 name:                aws-lambda
-version:             0.6.0.0
+version:             0.7.0.0
 github:              "aztecrex/haskell-lib-aws-lambda"
 license:             BSD3
 author:              "Greg Wiley"
@@ -17,13 +17,14 @@ description: README on Github at <https://github.com/aztecrex/haskell-lib-aws-la
 
 dependencies:
   - base >= 4.7 && < 5
-  - text
-  - mtl
-  - transformers
   - aeson
   - bytestring
   - data-default
+  - monad-time
+  - mtl
+  - text
   - time
+  - transformers
   - unordered-containers
 
 library:

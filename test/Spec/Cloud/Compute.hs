@@ -5,8 +5,12 @@ import Test.Tasty.HUnit (testCase)
 import Spec.TestHelp ((@?>=), (@?<=))
 
 import Data.Functor.Identity (Identity(..), runIdentity)
+import Data.Ratio ((%))
+import Data.Time.Clock (UTCTime)
+import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Control.Monad.Reader (ask, runReader)
 import Control.Applicative (liftA2)
+import Control.Monad.Time (MonadTime (..))
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.IO.Class (liftIO)
 
@@ -106,6 +110,14 @@ tests = testGroup "Compute" [
                 pure $ op x
         runComputeT program "anyc" "anyi" >> pure (), -- compilation is verification, this just runs it
 
+    testCase "monad time" $ do
+        -- given
+        let now = posixSecondsToUTCTime $ fromRational (1000000000 % 337)
+        -- when
+            actual = currentTime
+        --then
+        runTime (runComputeT actual "any" "any") now @?>= now,
+
     testCase "demo" $ do
         let input = 30
             op = (* 100)
@@ -118,3 +130,11 @@ tests = testGroup "Compute" [
     Ephemeral.tests
 
     ]
+
+newtype Time a = Time { runTime :: UTCTime -> a } deriving (Functor, Applicative, Monad)
+
+get :: Time UTCTime
+get = Time id
+
+instance MonadTime Time where
+    currentTime = get
