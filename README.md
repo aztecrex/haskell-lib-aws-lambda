@@ -31,7 +31,7 @@ context :: m ctx
 And provides a way to fail:
 
 ```Haskell
-abort :: err -> m ()
+abort :: forall a. err -> m a
 ```
 
 `ComputeT ctx evt err m` is an instance of the class.
