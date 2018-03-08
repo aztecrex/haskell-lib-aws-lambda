@@ -32,7 +32,7 @@ runComputeT lambda c e = ( runExceptT . runReaderT (unwrap lambda) ) (e, c)
 class MonadCompute ctx evt err m | m -> err ctx evt where
     event :: m evt
     context :: m ctx
-    abort :: forall a. err -> m ()
+    abort :: forall a. err -> m a
 
 instance (Monad m) => MonadCompute ctx evt err (ComputeT ctx evt  err m) where
     event = fst <$> Wrap (lift . pure =<< ask)
