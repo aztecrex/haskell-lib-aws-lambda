@@ -3,19 +3,22 @@ module Spec.Cloud.AWS.Lambda (tests) where
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (testCase, (@?=))
 
-import Data.Aeson (decodeStrict, encode)
+import Cloud.Compute.Ephemeral (OperationContext (..), TimedOperationContext (..))
+import Data.Aeson (decodeStrict, pairs, (.=))
+import Data.Aeson.Encoding (encodingToLazyByteString)
 import Data.ByteString.Lazy (toStrict)
 import Data.Default (def)
-import Data.HashMap.Strict (fromList)
+import Data.Monoid ((<>))
+import Data.Ratio ((%))
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8, decodeUtf8)
-import Cloud.Compute.Ephemeral (OperationContext (..))
+import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 
 import Cloud.AWS.Lambda (LambdaContext (..))
 
 tests :: TestTree
 tests = testGroup "Lambda" [
-    testCase "context operation name" $ do
+    testCase "operation context name" $ do
         -- given
         let namev = "lambda function name"
             ctx = def { lambdaName = namev }
@@ -24,7 +27,7 @@ tests = testGroup "Lambda" [
         -- then
         actual @?= namev,
 
-    testCase "context operation version" $ do
+    testCase "operation context version" $ do
         -- given
         let versionv = "lambda version name"
             ctx = def { lambdaVersion = versionv }
@@ -33,7 +36,7 @@ tests = testGroup "Lambda" [
         -- then
         actual @?= versionv,
 
-    testCase "context operation invocation" $ do
+    testCase "operation context invocation" $ do
         -- given
         let invocationv = "lambda invocation id"
             ctx = def { lambdaInvocation = invocationv }
@@ -41,6 +44,16 @@ tests = testGroup "Lambda" [
             actual = operationInvocation ctx
         -- then
         actual @?= invocationv,
+
+    testCase "timed operation context deadline" $ do
+        -- given
+        let deadlinev = 1520447224247
+            ctx = def { lambdaDeadline = deadlinev }
+        -- when
+            actual = operationDeadline ctx
+        -- then
+            expected = posixSecondsToUTCTime $ fromRational (deadlinev % 1000)
+        actual @?= expected,
 
     testCase "unmarshall context" $ do
         -- given
@@ -51,9 +64,11 @@ tests = testGroup "Lambda" [
             expected = def {
                 lambdaName = incomingName,
                 lambdaVersion = incomingVersion,
-                lambdaInvocation = incomingInvocation
+                lambdaInvocation = incomingInvocation,
+                lambdaDeadline = incomingDeadline
             }
         maybeActual @?= Just expected
+
     ]
 
 parse :: Text -> Maybe LambdaContext
@@ -68,17 +83,13 @@ incomingVersion = "FunctionVersion"
 incomingInvocation :: Text
 incomingInvocation = "FunctionInvocation"
 
-incomingContext :: Text
-incomingContext = (decodeUtf8 . toStrict . encode) $ fromList [
-    ("lambdaName" :: Text, incomingName),
-    ("lambdaVersion" :: Text, incomingVersion),
-    ("lambdaInvocation" :: Text, incomingInvocation)
-    ]
+incomingDeadline :: Integer
+incomingDeadline = 109252223
 
--- incomingContext :: Text
--- incomingContext = decodeUtf8 (toStrict (encode contextObject))
--- incomingContext =   "{"
---             <>      " \"lambdaName\": \""       <> incomingName <> "\","
---             <>      " \"lambdaVersion\": \""    <> incomingVersion <> "\","
---             <>      " \"lambdaInvocation\": \"" <> incomingInvocation
---             <>      "}"
+incomingContext :: Text
+incomingContext = (decodeUtf8 . toStrict . encodingToLazyByteString) $ pairs (
+        "lambdaName" .= incomingName <>
+        "lambdaVersion" .= incomingVersion <>
+        "lambdaInvocation" .= incomingInvocation <>
+        "lambdaDeadline" .= incomingDeadline
+    )
