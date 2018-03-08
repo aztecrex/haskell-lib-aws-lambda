@@ -17,13 +17,14 @@ description: README on Github at <https://github.com/aztecrex/haskell-lib-aws-la
 
 dependencies:
   - base >= 4.7 && < 5
-  - text
-  - mtl
-  - transformers
   - aeson
   - bytestring
   - data-default
+  - monad-time
+  - mtl
+  - text
   - time
+  - transformers
   - unordered-containers
 
 library:

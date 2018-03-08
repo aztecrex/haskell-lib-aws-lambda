@@ -9,6 +9,7 @@ import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (testCase)
 import Spec.TestHelp ((@?>=))
 
+import Control.Monad.Time (MonadTime (..))
 import Control.Monad.Trans.Reader (runReader, ReaderT, ask)
 import Data.Text (Text)
 import Data.Time.Calendar (Day (ModifiedJulianDay) )
@@ -16,7 +17,7 @@ import Data.Time.Clock (UTCTime (..), diffUTCTime)
 
 import Cloud.Compute (runCompute, runComputeT)
 import Cloud.Compute.Ephemeral (
-    OperationContext (..), MonadClock (..), TimedOperationContext (..),
+    OperationContext (..), TimedOperationContext (..),
     name, version, invocation, deadline, remainingTime)
 
 tests :: TestTree
@@ -92,6 +93,6 @@ newtype Deadline = Deadline { undeadline :: UTCTime } deriving (Eq, Show)
 instance TimedOperationContext Deadline where
     operationDeadline = undeadline
 
-instance (Monad m) => MonadClock (ReaderT UTCTime m) where
+instance (Monad m) => MonadTime (ReaderT UTCTime m) where
     currentTime = ask
 

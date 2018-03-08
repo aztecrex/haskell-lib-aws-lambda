@@ -9,6 +9,7 @@ module Cloud.Compute (
 import Data.Functor.Identity (Identity, runIdentity)
 import Control.Applicative (Applicative, pure)
 import Control.Monad (Monad)
+import Control.Monad.Time (MonadTime (..))
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.Trans.Reader (ReaderT, runReaderT, ask)
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
@@ -37,3 +38,6 @@ instance (Monad m) => MonadCompute ctx evt err (ComputeT ctx evt  err m) where
     event = fst <$> Wrap (lift . pure =<< ask)
     context = snd <$> Wrap (lift . pure =<< ask)
     abort = Wrap . lift . throwE
+
+instance (Monad m, MonadTime m) => MonadTime (ComputeT ctx evt err m) where
+    currentTime = lift currentTime
