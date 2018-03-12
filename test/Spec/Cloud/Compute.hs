@@ -56,9 +56,18 @@ tests = testGroup "Compute" [
         -- when
             actual = withEvent replacement event
         -- then
+        runCompute actual "any" orig @?>= replacement,
+
+    testCase "change context" $ do
+        -- given
+        let orig = 10011
+            replacement = "parking lot"
+        -- when
+            actual = withContext replacement context
+        -- then
         runCompute actual orig "any" @?>= replacement,
 
-    testCase "functor" $ do
+        testCase "functor" $ do
         let embedded = 19
             transform = (+1)
             lambda = pure embedded
@@ -144,6 +153,14 @@ withEvent :: (Monad m) => evt' -> ComputeT ctx evt' err m a -> ComputeT ctx evt 
 withEvent repl compute = do
     ctx <- context
     maybeAnswer <- lift $ runComputeT compute ctx repl
+    case maybeAnswer of
+        Right x -> pure x
+        Left e -> abort e
+
+withContext :: (Monad m) => ctx' -> ComputeT ctx' evt err m a -> ComputeT ctx evt err m a
+withContext repl compute = do
+    evt <- event
+    maybeAnswer <- lift $ runComputeT compute repl evt
     case maybeAnswer of
         Right x -> pure x
         Left e -> abort e
