@@ -49,6 +49,15 @@ tests = testGroup "Compute" [
             actual = abort err
         runCompute actual "anyc" "anyi" @?<= err,
 
+    testCase "change event" $ do
+        -- given
+        let orig = 10011
+            replacement = "cat burglar"
+        -- when
+            actual = withEvent replacement event
+        -- then
+        runCompute actual orig "any" @?>= replacement,
+
     testCase "functor" $ do
         let embedded = 19
             transform = (+1)
@@ -130,6 +139,14 @@ tests = testGroup "Compute" [
     Ephemeral.tests
 
     ]
+
+withEvent :: (Monad m) => evt' -> ComputeT ctx evt' err m a -> ComputeT ctx evt err m a
+withEvent repl compute = do
+    ctx <- context
+    maybeAnswer <- lift $ runComputeT compute ctx repl
+    case maybeAnswer of
+        Right x -> pure x
+        Left e -> abort e
 
 newtype Time a = Time { runTime :: UTCTime -> a } deriving (Functor, Applicative, Monad)
 
