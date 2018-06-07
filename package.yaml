@@ -46,6 +46,7 @@ tests:
 
 default-extensions:
   - ConstraintKinds
+  - DataKinds
   - DefaultSignatures
   - DeriveFunctor
   - DeriveGeneric
